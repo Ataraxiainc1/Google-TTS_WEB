@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text-to-Speech App</title>
+    <style>
+        body {
+            background-color: #222;
+            color: #00FF00; /* Cambiar a verde (código hexadecimal o nombre de color) */
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        textarea {
+            background-color: #333;
+            color: #00FF00; /* Cambiar a verde (código hexadecimal o nombre de color) */
+            width: 300px; /* Ajusta el ancho según tus necesidades */
+            height: 100px; /* Ajusta la altura según tus necesidades */
+        }
+    </style>
+</head>
+<body>
+    <h1>Text-to-Speech App</h1>
+    <form action="/synthesize" method="post" target="audio_frame">
+        <textarea name="text" id="text" rows="5" cols="40"></textarea>
+        <br>
+        <input type="submit" value="Convertir a audio">
+    </form>
+
+    <iframe name="audio_frame" style="display: none;"></iframe>
+
+    <h2>Texto convertido a audio exitosamente</h2>
+    <audio controls id="audio_player">
+        <source src="" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // Actualizar el reproductor de audio y mantener el texto introducido
+        window.onload = function() {
+            var audioPlayer = document.getElementById('audio_player');
+            var textArea = document.getElementById('text');
+
+            audioPlayer.src = ""; // Limpiar el src inicial del reproductor
+
+            // Manejar la respuesta del formulario de manera asíncrona
+            var form = document.querySelector('form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Evitar el envío normal del formulario
+
+                // Reiniciar el reproductor de audio
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+
+                // Realizar una solicitud POST asíncrona al servidor
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/synthesize', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                        var response = xhr.responseText;
+                        var audioUrl = '/audio/' + response;
+
+                        if (audioUrl) {
+                            audioPlayer.src = audioUrl + '?t=' + new Date().getTime();
+                            audioPlayer.load();
+                            audioPlayer.play();
+                        }
+                    }
+                };
+                xhr.send('text=' + encodeURIComponent(textArea.value));
+            });
+        }
+    </script>
+</body>
+</html>
